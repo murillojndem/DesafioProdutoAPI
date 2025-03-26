@@ -2,9 +2,9 @@
 {
     public class LinkResource
     {
-        public string Href { get; set; } = string.Empty;  // URL
-        public string Rel { get; set; } = string.Empty;   // "self", "update", "delete", etc.
-        public string Method { get; set; } = string.Empty; // "GET", "POST", "PUT", "DELETE", etc.
+        public string Href { get; set; } = string.Empty;
+        public string Rel { get; set; } = string.Empty;
+        public string Method { get; set; } = string.Empty;
 
         public LinkResource(string href, string rel, string method)
         {
