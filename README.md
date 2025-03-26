@@ -5,7 +5,6 @@ Este é o backend da aplicação de gerenciamento de produtos, desenvolvido em .
 ## 🏗️ Tecnologias Utilizadas
 
 - .NET 8 🚀
-- ASP.NET Core 🌐
 - FluentValidation ✅
 - Injeção de Dependência nativa do .NET 🏗️
 
