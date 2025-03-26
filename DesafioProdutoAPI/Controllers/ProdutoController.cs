@@ -2,8 +2,7 @@
 using DesafioProdutoAPI.Application.Services;
 using DesafioProdutoAPI.Application.DTOs;
 using FluentValidation;
-using Microsoft.AspNetCore.Http;
-using System.Text.Json;
+using DesafioProdutoAPI.HATEOAS;
 
 namespace DesafioProdutoAPI.Controllers;
 
@@ -20,6 +19,22 @@ public class ProdutoController : ControllerBase
         _logger = logger;
     }
 
+    private ProdutoDetalhesDTOHateoas ComHateoas(ProdutoDetalhesDTO dto)
+    {
+        var hateoas = new ProdutoDetalhesDTOHateoas
+        {
+            Id = dto.Id,
+            Nome = dto.Nome,
+            Categoria = dto.Categoria,
+            Preco = dto.Preco,
+            QuantidadeEmEstoque = dto.QuantidadeEmEstoque,
+            Disponivel = dto.Disponivel,
+            DataInclusao = dto.DataInclusao
+        };
+        hateoas.AddHateoasLinks(Url);
+        return hateoas;
+    }
+
     [HttpPost]
     public async Task<IActionResult> Criar([FromBody] ProdutoDTO dto)
     {
@@ -29,32 +44,23 @@ public class ProdutoController : ControllerBase
                 return BadRequest("Nome é obrigatório");
 
             var resultado = await _servico.CriarProdutoAsync(dto);
+            var resultadoComLinks = ComHateoas(resultado);
 
-            return CreatedAtAction(
-                nameof(ObterPorId),
-                new { id = resultado.Id },
-                resultado
-            );
+            return CreatedAtAction(nameof(ObterPorId), new { id = resultado.Id }, resultadoComLinks);
         }
         catch (ValidationException ex)
         {
-            return BadRequest(ex.Errors.Select(e => new {
-                e.PropertyName,
-                e.ErrorMessage
-            }));
+            return BadRequest(ex.Errors.Select(e => new { e.PropertyName, e.ErrorMessage }));
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Erro ao criar produto");
-            return StatusCode(500, new
-            {
-                Error = "Erro interno",
-                Details = ex.Message
-            });
+            return StatusCode(500, new { Error = "Erro interno", Details = ex.Message });
         }
     }
 
     [HttpGet("{id}")]
+    [ResponseCache(Duration = 60, Location = ResponseCacheLocation.Any, NoStore = false)]
     public async Task<IActionResult> ObterPorId(Guid id)
     {
         try
@@ -62,16 +68,13 @@ public class ProdutoController : ControllerBase
             var produto = await _servico.ObterPorIdAsync(id);
             if (produto == null) return NotFound();
 
-            return Ok(produto);
+            var resultadoComLinks = ComHateoas(produto);
+            return Ok(resultadoComLinks);
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Erro ao buscar produto");
-            return StatusCode(500, new
-            {
-                Error = "Erro interno",
-                Details = ex.Message
-            });
+            return StatusCode(500, new { Error = "Erro interno", Details = ex.Message });
         }
     }
 
@@ -79,14 +82,17 @@ public class ProdutoController : ControllerBase
     public async Task<IActionResult> ObterTodos()
     {
         var produtos = await _servico.ObterTodosAsync();
-        return Ok(produtos);
+        var resultado = produtos.Select(ComHateoas).ToList();
+        return Ok(resultado);
     }
 
     [HttpGet("categoria/{categoria}")]
+    [ResponseCache(Duration = 60, Location = ResponseCacheLocation.Any, NoStore = false)]
     public async Task<IActionResult> ObterPorCategoria(string categoria)
     {
         var produtos = await _servico.ObterPorCategoriaAsync(categoria);
-        return Ok(produtos);
+        var resultado = produtos.Select(ComHateoas).ToList();
+        return Ok(resultado);
     }
 
     [HttpPut("{id}")]
@@ -97,7 +103,8 @@ public class ProdutoController : ControllerBase
             var resultado = await _servico.AtualizarProdutoAsync(id, dto);
             if (resultado == null) return NotFound();
 
-            return Ok(resultado);
+            var resultadoComLinks = ComHateoas(resultado);
+            return Ok(resultadoComLinks);
         }
         catch (ValidationException ex)
         {

@@ -5,8 +5,19 @@ using FluentValidation;
 using DesafioProdutoAPI.Application.Validators;
 using FluentValidation.AspNetCore;
 using System.Text.Json.Serialization;
+using Microsoft.AspNetCore.Mvc;
 
 var builder = WebApplication.CreateBuilder(args);
+
+//Configuração do cacheamento das APIs
+builder.Services.AddControllers(options =>
+{
+    options.Filters.Add(new ResponseCacheAttribute
+    {
+        NoStore = true,
+        Location = ResponseCacheLocation.None
+    });
+});
 
 // Configuração do CORS
 builder.Services.AddCors(options => {
