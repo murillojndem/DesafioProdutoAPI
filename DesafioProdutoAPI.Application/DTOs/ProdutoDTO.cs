@@ -1,4 +1,5 @@
-﻿using System.Text.Json.Serialization;
+﻿using System.Net.Mail;
+using System.Text.Json.Serialization;
 
 namespace DesafioProdutoAPI.Application.DTOs;
 
